@@ -1,47 +1,43 @@
 #Purpose: Convert MIDI files to arduino tones
-import mido
+import mido #midi library
 
 def noteToFreq(note):
     a = 440 #frequency of A (common value is 440Hz)
     return (a / 32) * (2 ** ((note - 9) / 12))
 
-filepath = './midi/MKWCoconutMall.mid'
+def delay(ms):
+    return("delay(" + str(int(ms)) + ");\n")
+def noTone():
+    return("noTone(BUZZER_PIN);\n")
+def tone(freq):
+    return("tone(BUZZER_PIN, " + str(int(freq)) + ");\n")
+
+filepath = './midi/MKWCoconutMall.mid' 
 mid = mido.MidiFile(filepath)
 
-for i, track in enumerate(mid.tracks):
-    print('Track {}: {}'.format(i, track.name))
+file = open("output.txt", "w") #output file
 
-file = open("output.txt", "w")
+track = mid.tracks[1] #selected track
+note = 0 # current note register
+time = 0 # time counter
+reserved = False # Check if there is a note being played
 
 
-print("start")
-piano = mid.tracks[1]
-note = 0
-time = 0
-reserved = False
-for i, msg in enumerate(piano):
-    if i > 0:
-        if (msg.type == 'note_on' or msg.type == 'note_off'):
-            #print(msg.note, msg.time, msg.type)
-            type = (msg.type[5:].upper())
-            on = (type == "ON") and msg.velocity > 0
-            time += msg.time
-            if on and not reserved:
-                print("delay(", int(time/2), ");")
-                file.write("delay(" + str(int(time/2)) + ");\n")
-                time = 0
-                note = msg.note
-                reserved = True
-                file.write("tone0.play(" + str(int(noteToFreq(note))) + ");\n")
-            elif not on and reserved and msg.note == note:
-                print("delay(", int(time/2), ");")
-                
-                file.write("delay(" + str(int(time/2)) + ");\n")
-                time = 0
-                print("noTone(BUZZER_PIN);")
-                file.write("tone0.stop();\n")
-                reserved = False
 
-        else:
-            print(msg)
+for msg in track:
+    time += msg.time # increment time counter
+    if (msg.type == 'note_on' or msg.type == 'note_off'): #Make sure the message is a note
+        type = (msg.type[5:].upper())
+        on = (type == "ON") and msg.velocity > 0 #determine if note is on or off
+        if on and not reserved: #begin playing a note
+            file.write(delay(time/2))
+            time = 0
+            note = msg.note
+            reserved = True
+            file.write(tone(noteToFreq(note)))
+        elif not on and reserved and msg.note == note: # stop playing a note
+            file.write(delay(time/2))
+            time = 0
+            file.write(noTone())
+            reserved = False
 file.close()
