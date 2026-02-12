@@ -1,43 +1,89 @@
-/*
- * Created by ArduinoGetStarted.com
- *
- * This example code is in the public domain
- *
- * Tutorial page: https://arduinogetstarted.com/tutorials/arduino-piezo-buzzer
- */
-
 #include "pitches.h"
+#include "analogWave.h" // Include the library for analog waveform generation
+#define BUZZER_PIN 3
 
-#define BUZZER_PIN 11 // The Arduino pin connected to the buzzer
+analogWave wave(DAC);   // Create an instance of the analogWave class, using the DAC pin
 
-// notes in the melody:
-int melody[] = {
-  NOTE_C4, NOTE_G3, NOTE_G3, NOTE_A3, NOTE_G3, 0, NOTE_B3, NOTE_C4
-};
-
-// note durations: 4 = quarter note, 8 = eighth note, etc.:
-int noteDurations[] = {
-  4, 8, 8, 4, 4, 4, 4, 4
-};
+int b1Duration = 0;
+int b2Duration = 0;
+int cycle1 = 0;
+int cycle2 = 0;
+int length = 750;
+int reset = 0;
 
 void setup() {
-  // iterate over the notes of the melody:
-  for (int thisNote = 0; thisNote < 8; thisNote++) {
+  Serial.begin(9600);
+  wave.square(10);
+  wave.stop();
+  pinMode(BUZZER_PIN, OUTPUT);
+}
 
-    // to calculate the note duration, take one second divided by the note type.
-    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
-    int noteDuration = 1000 / noteDurations[thisNote];
-    tone(BUZZER_PIN, melody[thisNote], noteDuration);
 
-    // to distinguish the notes, set a minimum time between them.
-    // the note's duration + 30% seems to work well:
-    int pauseBetweenNotes = noteDuration * 1.30;
-    delay(pauseBetweenNotes);
-    // stop the tone playing:
-    noTone(BUZZER_PIN);
+void play1(int freq) {
+  wave.freq(freq);
+}
+
+void stop1() {
+  wave.stop();
+}
+
+void play2(int freq) {
+  tone(BUZZER_PIN, freq);
+}
+
+void stop2() {
+  noTone(BUZZER_PIN);
+}
+
+int newMillis() {
+  return millis() - reset;
+}
+
+void music() {
+if(newMillis() <= 31000) {
+  if (newMillis() >= b1Duration && cycle1 < length) {
+    // play current note
+    if (toneSequence1[cycle1][1] > 0) {
+      play1(toneSequence1[cycle1][1]);
+    }
+    else {
+      // if the value of the note is -1, play no sound (rest)
+      stop1();
+    }
+    
+    // set next note duration
+    b1Duration = newMillis() + toneSequence1[cycle1][0];
+    cycle1++;
+  }
+  
+
+  if (newMillis() >= b2Duration && cycle2 < length) {
+    // play current note
+    if (toneSequence2[cycle2][1] > 0) {
+      play2(toneSequence2[cycle2][1]);
+    }
+    else {
+      // if the value of the note is -1, play no sound (rest)
+      stop2();
+    }
+    
+    // set next note duration
+    b2Duration = newMillis() + toneSequence2[cycle2][0];
+    cycle2++;
+  }}
+  else {
+  reset = millis();
+  cycle1 = 0;
+  cycle2 = 0;
+  b1Duration = 0;
+  b2Duration = 0;
+  stop1();
+  stop2();
   }
 }
 
-void loop() {
-  // no need to repeat the melody.
+void loop()
+{
+  music();
+  //Do other stuff
 }
