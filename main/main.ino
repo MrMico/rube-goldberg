@@ -26,7 +26,6 @@ int cycle2 = 0;
 int length = 750;
 int reset = 0;
 int step = 0;
-
 int confidence = 0;
 
 void setup() {
@@ -47,7 +46,6 @@ void setup() {
 
   pinMode(SENSE1, INPUT);
   pinMode(A1, INPUT);
-  myservo.write(90);
 }
 
 
@@ -182,6 +180,5 @@ void loop()
   } else {
     confidence = 0;
   }
-  //Do other stuff
 
 }
