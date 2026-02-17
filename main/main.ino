@@ -1,8 +1,5 @@
 #include "pitches.h"
 #include "analogWave.h" // Include the library for analog waveform generation
-#include <Servo.h>
-
-Servo myservo;
 
 //PINS
 #define BUZZER_PIN 5
